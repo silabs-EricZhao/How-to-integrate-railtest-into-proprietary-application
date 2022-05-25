@@ -141,7 +141,7 @@ Print all the content of payload.
 #### PER Test
 
 Please find the `rftest_common.h` file in rftest folder and modify the definition of the trigger PIN and PORT based on your own hardware. In this demo project, the GPIO PA5 is used for PER test.
-
+Test 1000 packets data and set the interval time between packets to 100ms.
     rftest perRX 1000 100000
 Get the RX counters and status
 
@@ -150,18 +150,18 @@ Get the RX counters and status
 #### BER Test
 
 Since the BER test need a special PHY, which is different with the common reception and transmission. The BER test PHY index is 0 by default, it is necessary to issue `rftest setConfigIndex` command to switch to BER test PHY.
-
-    rftest setConfigIndex 0
 Switch to dedicated BER test PHY
 
-    rftest setBerConfig 1000 1
+    rftest setConfigIndex 0
 Configure 1000 bytes data for BER test.
 
-    rftest BerRx 1
+    rftest setBerConfig 1000 1
 Start to BER test.
 
-    rftest BerStatus
+    rftest BerRx 1
 Get the BER test result
+
+    rftest BerStatus
 
 ## How to port RF test in RAIL-based application
 
@@ -198,6 +198,7 @@ This section will describe how to port the rftest functionality to other RAIL-ba
     #include "app_assert.h"
     #include "rftest_common.h"
     ```
+
   - Finding the `sli_rail_util_on_event()` function and replacing the function `sl_rail_util_on_event()` with `rail_event_callback_process()`.
   
     ```c
@@ -212,7 +213,7 @@ This section will describe how to port the rftest functionality to other RAIL-ba
 - Modifying the `app_init()` function  
   Add the function `rail_event_callback_register()` and `rftest_add_cli_cmd_group()` to `app_init()` function.
 
-  ```c  
+  ```c
   RAIL_Handle_t app_init(void)
   {
     validation_check();
@@ -242,6 +243,7 @@ This section will describe how to port the rftest functionality to other RAIL-ba
     return rail_handle;
   }
   ```
+
 - Adding rftest main loop process in main process.
   Finding `sl_event_handlder.c` function and adding the `rftest_app_main()` to `sl_internal_app_process_action()` function as the following code snippet.
 
@@ -269,7 +271,7 @@ As we can see the table above, the increment flash is only 19.8k, and the increm
 
 ### Dose this project support connect stack?
 
-Unfortunately, so far the RFtest functionality can only port to RAIL-based application, it does not support Connect stack.
+Unfortunately, so far the rftest functionality can only port to RAIL-based application, it does not support Connect stack.
 
 ### How to configure the BER PHY for BER test?
 
