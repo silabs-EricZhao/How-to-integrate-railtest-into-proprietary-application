@@ -2,20 +2,23 @@
 
 ## Introduction and motivation  
 
-Silicon Labs usually recommends customers to use RAILtest application to measure or test RF performance for the EFR32 custom boards. But it requires to flash the firmware(RAILtest and Proprietary application) twice during mass production, which brings additional cost for customers.  Additionally, RAILtest function is too heavy and require more flash space for proprietary application, especially it is impossible to run RAILtest in 128K flash chip. In the past years, we heard many customers raise the same request from time to time, they prefer to port the RAILtest function into a Proprietary application so that they can flash the firmware only once in the factory. It is the similar MFGLIB function in Zigbee technology.
-In short, customer hope a simplified and built-in RF test functionality. This project will demonstrate how to integrate partial RAILtest functionality to Proprietary application.
+Silicon Labs usually recommends customers to use RAILtest application to measure or test RF performance for the EFR32 custom boards. But it requires to flash the firmware(RAILtest and Proprietary application) twice during mass production, which brings additional cost for customers.  Additionally, RAILtest function is too heavy and require more flash space for proprietary application, especially it is impossible to run RAILtest in 128K flash chip. In the past years, we heard many customers raise the same request from time to time, they prefer to port the RAILtest function into a Proprietary application so that they can flash the firmware only once in the factory. It is the similar to MFGLIB function in Zigbee technology.
+In short, customer hope a simplified and built-in RF test functionality. This project will demonstrate how to integrate partial RAILtest functionality to a proprietary application.
   
 ## Overview
 
-To avoid the RF test function interfering the user application, and the BER test also require a specified PHY which can not be used for normal TX/RX packet. Hence, the protocol-based multi-PHY is the best solution for such scenario. Here are 3 Phys are defined in this demo project as below.
+The RF test PHY will share the common PHY with user application PHY, thus to ensure the test result is for real PHY which is real in use. Due to the BER test require a special PHY which can not be used for normal TX/RX packet. Hence, the protocol-based multi-PHY is the best solution for such scenario. Here are 2 phys are defined in this demo project as below.
 
-- RF test PHY, channel configuration index is 0, it can be used for the normal packet reception and transmit test.
-- BER test PHY, channel configuration index is 1, it can only be used for BER test.
-- User application PHY, channel configuration index is 2, this PHY is used for application PHY, user should develop their own application on this PHY. By default, the application PHY is applied when system startup.
+- BER test PHY, channel configuration index is 0, it can only be used for BER test, and it can not be used for packet transmission and reception.
+- User application PHY, channel configuration index is 1, this PHY is used for application PHY and RF test, user will develop their own application on this PHY. By default, the application PHY is applied when system startup.
   
 These PHY can be switch to each other using the CLI command `rftest setConfigIndex`, the relationship between them is as the following figure.
 
-<img src="doc/multi_phy_overview.png">
+![Multi-PHY overview](doc/multi_phy_overview.png)
+
+### Note
+
+Users should make sure the BER PHY basic configuration(modulation type, bit rate, frequency, channel) is consistent with application PHY. Otherwise, the result of BER test won’t reflect the real performance.
 
 ## Which RAILtest command will be supported
 
@@ -75,7 +78,7 @@ Below list are the not supported command
 
 #### Startup
 
-By default, current PHY is the user application PHY when startup. To switch the RF measure PHY, We have to issue the `rftestEnable` command to switch to rf test mode prior to the RF test.
+By default, current PHY is the user application PHY when startup. To switch the RF measure PHY, We have to issue the `rftestEnable` command to switch to RF test mode before RF test.
 
     rftestenable
 
@@ -128,16 +131,16 @@ Set the TX options, such as remove CRC or use the specific preamble length to tr
 Set the packet length, by default the packet length is 16 bytes, but we can also set the packet length, please note that should keep the same length setting on both of transmitter and receiver. Otherwise, the reception error will occur.
 
     rftest setTxLength 32
-Set the payload content.
+Set the content of payload.
 
     rftest setPayload 0 2 3 4 5 6
-Print all the payload content.
+Print all the content of payload.
 
     rftest printTxPacket
 
 #### PER Test
 
-Please find the rftest_common.h file in rftest folder and modify the definition for the trigger PIN and PORT according your hardware. In demo project, GPIO PA5 is used for PER test.
+Please find the `rftest_common.h` file in rftest folder and modify the definition of the trigger PIN and PORT based on your own hardware. In this demo project, the GPIO PA5 is used for PER test.
 
     rftest perRX 1000 100000
 Get the RX counters and status
@@ -146,27 +149,28 @@ Get the RX counters and status
 
 #### BER Test
 
-Since the BER test need a special PHY, which is different with the common reception and transmission. The BER test PHY index is 0, There is no need to switch the PHY index manually, we have already integrate it into `rftest setConfigIndex` command.
+Since the BER test need a special PHY, which is different with the common reception and transmission. The BER test PHY index is 0 by default, it is necessary to issue `rftest setConfigIndex` command to switch to BER test PHY.
 
-    rftest setConfigIndex 1
-Configure 1000 bytes data for BER test.
+    rftest setConfigIndex 0
+Switch to dedicated BER test PHY
 
     rftest setBerConfig 1000 1
-Start the BER test
+Configure 1000 bytes data for BER test.
 
     rftest BerRx 1
-Get the BER test status
+Start to BER test.
 
     rftest BerStatus
+Get the BER test result
 
 ## How to port RF test in RAIL-based application
 
 This section will describe how to port the rftest functionality to other RAIL-based application, here I would like to use the simple TRX example to demonstrate it.
 
 - Copying the `rftest` folder to your project location.  
-  Copy the whole [rftest](src/rftest/) folder to your project.
+  Copy the whole [rftest](src/rftest/) folder in src/rftest path to your project.
 - Setting the path  
-  Right-click the project, properties→C/C++ build→Settings→GNU ARM C compiler→Includes, add the rftest folder path to paths.
+  Right-click the project, properties→C/C++ build→Settings→GNU ARM C compiler→Includes, add the path of rftest folder to the includes path.
   
   ![Includes path](doc/includes.png)
 
@@ -184,29 +188,29 @@ This section will describe how to port the rftest functionality to other RAIL-ba
   
     ![Channel configuration index](doc/default_phy_index.png)
 
-- Replacing the `sl_rail_util_on_event` function in `sl_rail_util_callback.c` file.
-  - Finding `sl_rail_util_callbacks.c` in `autogen` folder, inclde the head file `#include "rftest_common.h"`
+- Replacing the `sl_rail_util_on_event()` function in `sl_rail_util_callback.c` file.
+  - Finding `sl_rail_util_callbacks.c` in `autogen` folder, include the head file `#include "rftest_common.h"`
   
-  ```c  
-  #include "rail.h"
-  #include "sl_component_catalog.h"
-  #ifdef SL_CATALOG_APP_ASSERT_PRESENT
-  #include "app_assert.h"
-  #include "rftest_common.h"
-  ```
-  - Finding the `sli_rail_util_on_event` function and replacing the function `sl_rail_util_on_event` with `rail_event_callback_process`.
+    ```c  
+    #include "rail.h"
+    #include "sl_component_catalog.h"
+    #ifdef SL_CATALOG_APP_ASSERT_PRESENT
+    #include "app_assert.h"
+    #include "rftest_common.h"
+    ```
+  - Finding the `sli_rail_util_on_event()` function and replacing the function `sl_rail_util_on_event()` with `rail_event_callback_process()`.
   
-  ```c
-  // Internal-only callback set up through call to RAIL_Init().
-  void sli_rail_util_on_event(RAIL_Handle_t rail_handle,
-                              RAIL_Events_t events)
-  {
-    rail_event_callback_process(rail_handle, events);
-  }
-  ```
+    ```c
+    // Internal-only callback set up through call to RAIL_Init().
+    void sli_rail_util_on_event(RAIL_Handle_t rail_handle,
+                                RAIL_Events_t events)
+    {
+      rail_event_callback_process(rail_handle, events);
+    }
+    ```
 
-- Modifying the `app_init` function  
-  Add the function `rail_event_callback_register` and `rftest_add_cli_cmd_group` to `app_init` function.
+- Modifying the `app_init()` function  
+  Add the function `rail_event_callback_register()` and `rftest_add_cli_cmd_group()` to `app_init()` function.
 
   ```c  
   RAIL_Handle_t app_init(void)
@@ -238,15 +242,15 @@ This section will describe how to port the rftest functionality to other RAIL-ba
     return rail_handle;
   }
   ```
-  - Adding rftest main loop process in main process.
-    Finding `sl_event_handlder.c` function and adding the `rftest_app_main` to `sl_internal_app_process_action` function as the following code snippet.
+- Adding rftest main loop process in main process.
+  Finding `sl_event_handlder.c` function and adding the `rftest_app_main()` to `sl_internal_app_process_action()` function as the following code snippet.
 
-    ```c
-    void sl_internal_app_process_action(void)
-    {
-      rftest_app_main();
-    }
-    ```
+  ```c
+  void sl_internal_app_process_action(void)
+  {
+    rftest_app_main();
+  }
+  ```
 
 ## Resource usage compared with simple_TRX example
 
@@ -259,7 +263,7 @@ Below table is a comparison between original simple TRX and after add the rftest
 
 Conclusion:
 
-As we can see above table, the increment flash is only 19.8k, and the increment RAM is 0.51k.
+As we can see the table above, the increment flash is only 19.8k, and the increment RAM is 0.51k, it is acceptable for the resource restriction SOC.
 
 ## FAQ
 
