@@ -32,26 +32,26 @@ For most of RAIL-based applications, there is only need a part of RAILtest comma
 |5|setConfigIndex|Activate a multi-PHY radio configuration|
 |6|setRxOptions| Show/Configure receive options (RAIL_RX_OPTIONs)|
 |7|rx|Control receive mode|
-|8|setTxOptions|Show/Configure receive options (RAIL_RX_OPTIONs).|
+|8|setTxOptions|Show/Configure receive options (RAIL_RX_OPTIONs)|
 |9|tx|Transmit packets with current TX options.|
-|10|setPower|Set the transmit power. The radio must be IDLE.|
-|11|getPower|Get the transmit power in deci-dBm.|
-|12|getPowerLimits|Get min and max powerLevel for a power mode.|
-|13|getRssi|Get RSSI in dBm. It'll be invalid if receiver isn't ready.|
-|14|setTxTone|Control tone transmission.|
-|15|setTxStream| Control stream transmission.|
-|16|status| Print the current status counters.|
-|17|setCtune|Set the value of HFXO CTUNE. The radio must be IDLE.|
-|18|getCtune|Get the value of HFXO CTUNE.|
-|18|setCtuneDelta|Set the value of HFXO CTUNE delta.|
-|19|getCtuneDelta|Get the value of HFXO CTUNE delta.|
-|20|getChannel|Get the current radio channel.|
-|21|setChannel|Set the radio channel.|
-|22|setBerConfig|Set number of bytes to receive in BER mode.|
-|23|berRx|Control BER receive mode.|
-|24|berStatus|Get status of current or last BER test.|
-|25|reset|Perform a reboot of the chip.|
-|26|resetCounters|Resets the TX and RX counters.|
+|10|setPower|Set the transmit power. The radio must be IDLE|
+|11|getPower|Get the transmit power in deci-dBm|
+|12|getPowerLimits|Get min and max powerLevel for a power mode|
+|13|getRssi|Get RSSI in dBm. It'll be invalid if receiver isn't ready|
+|14|setTxTone|Control tone transmission|
+|15|setTxStream| Control stream transmission|
+|16|status| Print the current status counters|
+|17|setCtune|Set the value of HFXO CTUNE. The radio must be IDLE|
+|18|getCtune|Get the value of HFXO CTUNE|
+|18|setCtuneDelta|Set the value of HFXO CTUNE delta|
+|19|getCtuneDelta|Get the value of HFXO CTUNE delta|
+|20|getChannel|Get the current radio channel|
+|21|setChannel|Set the radio channel|
+|22|setBerConfig|Set number of bytes to receive in BER mode|
+|23|berRx|Control BER receive mode|
+|24|berStatus|Get status of current or last BER test|
+|25|reset|Perform a reboot of the chip|
+|26|resetCounters|Resets the TX and RX counters|
 
 ## Which RAILtest command are not supported
 
@@ -60,8 +60,8 @@ Below list are the not supported command
 - BLE related command
 - IEEE 802.15.4 related command
 - Z-Wave related command
-- CSMA/LBT, Auto ACK, Channel Hopping, Low Duty Cycle, sleep.
-- Advanced mode, FIFO mode, direct mode, address filter.
+- CSMA/LBT, Auto ACK, Channel Hopping, Low Duty Cycle, sleep
+- Advanced mode, FIFO mode, direct mode, address filter
 - Debug command(Such as PRS, Timer)
 
 ## How to use it
@@ -71,8 +71,8 @@ Below list are the not supported command
 - Two WSTK boards: 4264C board
 - IDE: Simplicity Studio V5
 - SDK Version: SDK V4.0.2
-- Import the attached project file(.sls file) to Simplicity Studio V5, compiling and flashing to device.
-- Open series console, issuing the `rftest help` command to get all RF test related command description. All the commands are compatible with RAILtest.
+- Import the attached project file(.sls file) to Simplicity Studio V5, compiling and flashing to device
+- Open series console, issuing the `rftest help` command to get all RF test related command description. All the commands are compatible with RAILtest
   
 ### RF test command
 
@@ -86,10 +86,10 @@ By default, current PHY is the user application PHY when startup. To switch the 
 
 Get current channel
 
-    rftest GetChannel
+    rftest getChannel
 Set channel to a specific channel, for example, set channel to 1
 
-    rftest SetChannel 1
+    rftest setChannel 1
 
 #### Test TX power and spectrum
 
@@ -150,7 +150,8 @@ Get the RX counters and status
 #### BER Test
 
 Since the BER test need a special PHY, which is different with the common reception and transmission. The BER test PHY index is 0 by default, it is necessary to issue `rftest setConfigIndex` command to switch to BER test PHY.
-Switch to dedicated BER test PHY
+
+Switch to dedicated BER test PHY.
 
     rftest setConfigIndex 0
 Configure 1000 bytes data for BER test.
